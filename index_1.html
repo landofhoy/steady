@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2EFE9">
+<title>Steady — Exposure Log</title>
+<style>
+  :root{
+    --paper:#F2EFE9;--paper-2:#FBFAF6;--ink:#2C3026;--ink-soft:#6E7264;
+    --line:#DcD8CE;--sage:#7C8F6B;--sage-deep:#5C6E4D;--clay:#C97B5A;
+    --safe-top:env(safe-area-inset-top);--safe-bot:env(safe-area-inset-bottom);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;}
+  .wrap{max-width:540px;margin:0 auto;min-height:100%;}
+
+  /* ===== Auth gate ===== */
+  #authView{display:none;min-height:100vh;flex-direction:column;justify-content:center;padding:0 26px calc(var(--safe-bot) + 40px);}
+  #authView.on{display:flex;}
+  .auth-brand{display:flex;align-items:baseline;gap:9px;margin-bottom:6px;}
+  .auth-brand h1{font-family:Georgia,serif;font-size:38px;font-weight:600;letter-spacing:-.5px;}
+  .auth-brand .dot{width:11px;height:11px;border-radius:50%;background:var(--sage);transform:translateY(-4px);}
+  .auth-sub{color:var(--ink-soft);font-size:15px;line-height:1.5;margin-bottom:32px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.6px;margin:0 2px 7px;}
+  .field input{width:100%;border:1.5px solid var(--line);background:var(--paper-2);border-radius:14px;padding:14px;
+    font-family:inherit;font-size:16px;color:var(--ink);}
+  .field input:focus{outline:none;border-color:var(--sage);}
+  .auth-err{color:var(--clay);font-size:13.5px;margin:4px 2px 0;min-height:18px;line-height:1.4;}
+  .auth-toggle{text-align:center;margin-top:20px;font-size:14px;color:var(--ink-soft);}
+  .auth-toggle button{background:none;border:none;color:var(--sage-deep);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;}
+  .auth-note{font-size:11.5px;color:var(--ink-soft);text-align:center;margin-top:26px;line-height:1.5;opacity:.85;}
+
+  header{padding:calc(var(--safe-top) + 22px) 22px 18px;position:sticky;top:0;z-index:20;
+    background:linear-gradient(var(--paper) 78%, rgba(242,239,233,0));}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;}
+  .brand{display:flex;align-items:baseline;gap:9px;}
+  .brand h1{font-family:Georgia,"Times New Roman",serif;font-size:30px;font-weight:600;letter-spacing:-.5px;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--sage);transform:translateY(-3px);}
+  .tagline{color:var(--ink-soft);font-size:14px;margin-top:3px;}
+  .syncpill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;
+    border:1px solid var(--line);background:var(--paper-2);color:var(--ink-soft);cursor:pointer;white-space:nowrap;}
+  .syncpill .led{width:7px;height:7px;border-radius:50%;background:var(--sage);}
+  .syncpill.off .led{background:#C9A05A;}
+  .syncpill.local .led{background:var(--ink-soft);}
+  .syncpill.busy .led{background:#5B8AC9;animation:pulse 1s infinite;}
+  @keyframes pulse{50%{opacity:.3;}}
+
+  .tabs{display:flex;gap:6px;margin-top:16px;background:rgba(0,0,0,.04);padding:4px;border-radius:13px;}
+  .tab{flex:1;text-align:center;padding:9px 4px;border:none;background:transparent;font-size:13.5px;font-weight:600;
+    color:var(--ink-soft);border-radius:10px;font-family:inherit;transition:.18s;cursor:pointer;}
+  .tab.on{background:var(--paper-2);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07);}
+
+  main{padding:4px 18px calc(var(--safe-bot) + 40px);}
+  .view{display:none;animation:fade .25s ease;}
+  .view.on{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){.view{animation:none;}}
+
+  .section-label{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+    color:var(--ink-soft);margin:22px 4px 11px;display:flex;justify-content:space-between;align-items:center;}
+
+  .cheer{margin:10px 2px 4px;}
+  .cheer .greet{font-family:Georgia,serif;font-size:23px;font-weight:600;line-height:1.25;}
+  .cheer .msg{font-size:14.5px;line-height:1.5;color:var(--ink-soft);margin-top:8px;}
+  .streak{display:inline-flex;align-items:center;gap:6px;margin-top:13px;background:rgba(201,123,90,.13);
+    color:var(--clay);font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:20px;}
+
+  .opt{border-radius:20px;padding:18px 19px;margin-bottom:13px;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s;}
+  .opt:active{transform:scale(.99);}
+  .opt .kind{font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;display:flex;align-items:center;gap:7px;}
+  .opt .name{font-family:Georgia,serif;font-size:20px;line-height:1.28;font-weight:600;margin:9px 0 0;position:relative;z-index:1;}
+  .opt .desc{font-size:13.5px;line-height:1.45;margin-top:9px;position:relative;z-index:1;}
+  .opt .act{margin-top:15px;width:100%;border:none;border-radius:13px;padding:13px;font-family:inherit;font-size:15px;
+    font-weight:700;cursor:pointer;position:relative;z-index:1;transition:.15s;}
+  .opt .act:active{transform:scale(.98);}
+  .opt.reach{background:linear-gradient(150deg,#5C6E4D,#7C8F6B);color:#fff;box-shadow:0 10px 26px rgba(92,110,77,.28);}
+  .opt.reach::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.07);}
+  .opt.reach .kind{opacity:.82;}.opt.reach .desc{opacity:.93;}
+  .opt.reach .act{background:#fff;color:var(--sage-deep);}
+  .opt.reach .prog{display:flex;gap:5px;margin-top:14px;position:relative;z-index:1;}
+  .opt.reach .pip{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.25);}
+  .opt.reach .pip.fill{background:#F2EFE9;}
+  .opt.safe{background:var(--paper-2);border:1.5px solid var(--line);color:var(--ink);}
+  .opt.safe .kind{color:var(--sage-deep);}.opt.safe .desc{color:var(--ink-soft);}
+  .opt.safe .act{background:rgba(124,143,107,.16);color:var(--sage-deep);}
+  .opt .sui-tag{position:absolute;right:16px;top:16px;font-family:Georgia,serif;font-weight:700;font-size:15px;opacity:.5;z-index:1;}
+  .miniaffirm{text-align:center;font-size:13px;color:var(--ink-soft);line-height:1.5;padding:18px 20px 4px;font-style:italic;}
+
+  .calcard{background:var(--paper-2);border:1px solid var(--line);border-radius:18px;padding:16px 16px 18px;margin-bottom:6px;}
+  .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .calhead .mlabel{font-family:Georgia,serif;font-size:18px;font-weight:600;}
+  .calnav{display:flex;gap:8px;}
+  .calnav button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--paper);
+    color:var(--ink);font-size:16px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;}
+  .calnav button:active{background:var(--line);}.calnav button:disabled{opacity:.35;}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;}
+  .dow span{text-align:center;font-size:10.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.5px;}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cell{aspect-ratio:1/1;border-radius:11px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;font-size:13px;color:var(--ink);position:relative;}
+  .cell.pad{visibility:hidden;}
+  .cell.today{outline:2px solid var(--sage);outline-offset:-2px;font-weight:700;}
+  .cell.logged{cursor:pointer;color:#fff;font-weight:700;}
+  .cell.instreak{box-shadow:0 0 0 2px rgba(201,123,90,.35);}
+  .cell .cd{line-height:1;}
+  .cell .cdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.85);}
+  .cell.sel{transform:scale(1.04);box-shadow:0 4px 12px rgba(0,0,0,.18);}
+  .callegend{display:flex;align-items:center;gap:13px;margin-top:14px;flex-wrap:wrap;}
+  .callegend .lg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-soft);}
+  .callegend .sw{width:11px;height:11px;border-radius:4px;}
+
+  .streakrow{display:flex;gap:10px;margin:14px 0 4px;}
+  .streakbox{flex:1;background:var(--paper-2);border:1px solid var(--line);border-radius:15px;padding:13px;text-align:center;}
+  .streakbox .v{font-family:Georgia,serif;font-size:24px;font-weight:700;}
+  .streakbox .k{font-size:11px;color:var(--ink-soft);margin-top:2px;font-weight:600;}
+  .streakbox.hot{background:linear-gradient(150deg,rgba(201,123,90,.14),rgba(201,123,90,.06));border-color:rgba(201,123,90,.3);}
+  .streakbox.hot .v{color:var(--clay);}
+
+  .daydetail{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:6px 0 0;}
+  .daydetail .dt{font-size:13px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+  .ditem{display:flex;align-items:center;gap:11px;padding:7px 0;}
+  .ditem+.ditem{border-top:1px solid var(--line);}
+  .ditem .db{flex:none;width:30px;height:30px;border-radius:9px;color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:Georgia,serif;font-weight:700;font-size:13px;}
+  .ditem .dx{flex:1;font-size:13.5px;line-height:1.3;}
+
+  .step{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:15px 16px;margin-bottom:11px;
+    cursor:pointer;display:flex;align-items:center;gap:14px;transition:transform .12s;}
+  .step:active{transform:scale(.985);}.step.done{opacity:.62;}
+  .step.isreach{border-color:var(--sage);box-shadow:0 0 0 2px rgba(124,143,107,.25);}
+  .sui{flex:none;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+    font-family:Georgia,serif;font-size:19px;font-weight:700;color:#fff;}
+  .step-body{flex:1;min-width:0;}
+  .step-title{font-size:15px;line-height:1.32;font-weight:500;}
+  .step-meta{font-size:12.5px;color:var(--ink-soft);margin-top:4px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .chip{display:inline-flex;align-items:center;gap:4px;background:rgba(124,143,107,.13);color:var(--sage-deep);padding:2px 8px;border-radius:20px;font-weight:600;}
+  .chip.star{background:rgba(201,123,90,.15);color:var(--clay);}
+  .chev{flex:none;color:var(--line);font-size:20px;}
+
+  .scrim{position:fixed;inset:0;background:rgba(20,22,17,.42);opacity:0;pointer-events:none;transition:.25s;z-index:40;}
+  .scrim.on{opacity:1;pointer-events:auto;}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--paper);border-radius:26px 26px 0 0;
+    padding:10px 22px calc(var(--safe-bot) + 26px);transform:translateY(102%);transition:transform .32s cubic-bezier(.22,1,.36,1);
+    max-width:540px;margin:0 auto;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .sheet.on{transform:translateY(0);}
+  .grab{width:38px;height:5px;border-radius:5px;background:var(--line);margin:6px auto 16px;}
+  .sheet h2{font-family:Georgia,serif;font-size:21px;font-weight:600;line-height:1.25;margin-bottom:6px;}
+  .sheet .base{font-size:13px;color:var(--ink-soft);margin-bottom:22px;}
+  .q{font-size:14px;font-weight:600;margin:0 2px 11px;}
+  .scale{display:flex;gap:8px;}
+  .sc{flex:1;aspect-ratio:1/1.1;border:1.5px solid var(--line);background:var(--paper-2);border-radius:14px;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;font-family:inherit;transition:.14s;}
+  .sc .n{font-family:Georgia,serif;font-size:22px;font-weight:700;color:var(--ink);}
+  .sc .l{font-size:9.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.3px;}
+  .sc.pick{border-color:transparent;color:#fff;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.14);}
+  .sc.pick .n,.sc.pick .l{color:#fff;}
+  .scale-key{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin:9px 2px 24px;}
+  textarea{width:100%;border:1.5px solid var(--line);background:var(--paper-2);border-radius:14px;padding:13px;
+    font-family:inherit;font-size:15px;color:var(--ink);resize:none;min-height:78px;}
+  textarea:focus{outline:none;border-color:var(--sage);}
+  .btn{width:100%;border:none;border-radius:15px;padding:16px;font-family:inherit;font-size:16px;font-weight:700;color:#fff;
+    background:var(--sage-deep);margin-top:26px;cursor:pointer;transition:.15s;}
+  .btn:active{transform:scale(.98);}.btn:disabled{background:var(--line);color:var(--ink-soft);}
+  .btn.ghost{background:transparent;color:var(--ink-soft);border:1.5px solid var(--line);margin-top:10px;}
+
+  .hcard{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:11px;}
+  .hrow{display:flex;align-items:flex-start;gap:13px;}
+  .hbadge{flex:none;width:38px;height:38px;border-radius:11px;color:#fff;display:flex;align-items:center;justify-content:center;
+    font-family:Georgia,serif;font-weight:700;font-size:16px;}
+  .hcard .ht{font-size:14.5px;font-weight:500;line-height:1.3;}
+  .hcard .hd{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .hcard .hnote{font-size:13.5px;color:var(--ink);background:rgba(0,0,0,.03);border-radius:10px;padding:9px 11px;margin-top:11px;line-height:1.4;}
+
+  .empty{text-align:center;padding:40px 24px;color:var(--ink-soft);}
+  .empty .ico{font-size:34px;margin-bottom:12px;}.empty p{font-size:14px;line-height:1.5;}
+
+  .stats{display:flex;gap:10px;margin:6px 0 4px;}
+  .stat{flex:1;background:var(--paper-2);border:1px solid var(--line);border-radius:15px;padding:14px;text-align:center;}
+  .stat .v{font-family:Georgia,serif;font-size:26px;font-weight:700;}
+  .stat .k{font-size:11px;color:var(--ink-soft);margin-top:2px;font-weight:600;}
+
+  .acct{background:var(--paper-2);border:1px solid var(--line);border-radius:16px;padding:15px 16px;margin-top:6px;}
+  .acct .ae{font-size:14px;font-weight:600;}
+  .acct .as{font-size:12px;color:var(--ink-soft);margin-top:3px;}
+  .acct .arow{display:flex;gap:10px;margin-top:13px;}
+  .acct .arow button{flex:1;border-radius:11px;padding:11px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);}
+  .linkbtn{background:none;border:none;color:var(--sage-deep);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
+
+  .toast{position:fixed;left:50%;bottom:calc(var(--safe-bot) + 28px);transform:translate(-50%,20px);background:var(--ink);
+    color:var(--paper);padding:13px 22px;border-radius:30px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;
+    transition:.3s;z-index:80;max-width:90%;text-align:center;line-height:1.35;}
+  .toast.on{opacity:1;transform:translate(-50%,0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- ===== AUTH ===== -->
+  <section id="authView">
+    <div class="auth-brand"><h1>Steady</h1><span class="dot"></span></div>
+    <p class="auth-sub">Sign in to keep your progress synced across every device, on your terms.</p>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></div>
+    <div class="field"><label>Password</label><input id="authPass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    <div class="auth-err" id="authErr"></div>
+    <button class="btn" id="authBtn" style="margin-top:8px">Sign in</button>
+    <div class="auth-toggle" id="authToggle">New here? <button id="authSwap">Create an account</button></div>
+    <p class="auth-note" id="authNote">Your logs are private to your account. You can use the app offline too — it'll sync when you're back online.</p>
+  </section>
+
+  <!-- ===== APP ===== -->
+  <div id="appView">
+    <header>
+      <div class="topbar">
+        <div>
+          <div class="brand"><h1>Steady</h1><span class="dot"></span></div>
+          <p class="tagline">One step at a time, on your terms.</p>
+        </div>
+        <button class="syncpill" id="syncPill"><span class="led"></span><span id="syncTxt">Synced</span></button>
+      </div>
+      <div class="tabs">
+        <button class="tab on" data-tab="today">This week</button>
+        <button class="tab" data-tab="history">History</button>
+        <button class="tab" data-tab="ladder">Ladder</button>
+        <button class="tab" data-tab="progress">Progress</button>
+      </div>
+    </header>
+    <main>
+      <section class="view on" id="today">
+        <div class="cheer" id="cheer"></div>
+        <div class="section-label">Here's what you could try</div>
+        <div id="options"></div>
+        <div class="miniaffirm" id="miniaffirm"></div>
+      </section>
+      <section class="view" id="history">
+        <div class="streakrow" id="streakRow"></div>
+        <div class="section-label">Your month at a glance</div>
+        <div class="calcard" id="calcard"></div>
+        <div id="dayDetail"></div>
+        <div class="section-label">All entries</div>
+        <div id="historyList"></div>
+      </section>
+      <section class="view" id="ladder">
+        <div class="section-label">Your full hierarchy</div>
+        <div id="ladderList"></div>
+      </section>
+      <section class="view" id="progress">
+        <div class="section-label">At a glance</div>
+        <div class="stats">
+          <div class="stat"><div class="v" id="stTotal">0</div><div class="k">Logged</div></div>
+          <div class="stat"><div class="v" id="stWeek">0</div><div class="k">This week</div></div>
+          <div class="stat"><div class="v" id="stAvg">—</div><div class="k">Avg difficulty</div></div>
+        </div>
+        <div class="section-label">Steps you've conquered</div>
+        <div id="progressList"></div>
+        <div class="section-label">Account</div>
+        <div class="acct" id="acct"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <h2 id="shTitle"></h2>
+  <p class="base" id="shBase"></p>
+  <p class="q">How hard was it this time?</p>
+  <div class="scale" id="scale"></div>
+  <div class="scale-key"><span>1 · Easy</span><span>5 · Too hard to repeat</span></div>
+  <p class="q">Anything you want to remember? <span style="font-weight:400;color:var(--ink-soft)">(optional)</span></p>
+  <textarea id="note" placeholder="How you felt, what helped, what you noticed…"></textarea>
+  <button class="btn" id="save" disabled>Save this win</button>
+  <button class="btn ghost" id="cancel">Cancel</button>
+</div>
+
+<div class="toast" id="toast">Logged ✓</div>
+
+<!-- Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+/* ============================================================
+   STEADY — exposure log, offline-first with Supabase sync
+   ------------------------------------------------------------
+   >>> PASTE YOUR SUPABASE PROJECT VALUES HERE <<<
+   - SUPABASE_URL:  Project Settings → Data API → Project URL
+                    (or https://<your-project-ref>.supabase.co)
+   - SUPABASE_ANON: Project Settings → API Keys → the "publishable" key
+                    (NOT the "secret" key — never use that one here)
+   Both are safe to ship in a public site; Row Level Security
+   (set up in the SQL step) is what actually protects the data.
+============================================================ */
+const SUPABASE_URL  = "https://esgmedqsdecmukdlgjvi.supabase.co";
+const SUPABASE_ANON = "sb_publishable_GfYXdmAOLWxHfTuVra8-Qw_v_dBs3Jg";
+
+const SUPA_READY = SUPABASE_URL && !SUPABASE_URL.includes("YOUR-PROJECT");
+let sb = null;
+if (SUPA_READY && window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ===== Hierarchy ===== */
+const HIERARCHY=[
+  {sui:100,t:"Driving to office"},{sui:100,t:"Driving to airport"},
+  {sui:95,t:"Open step"},{sui:90,t:"Open step"},{sui:85,t:"Open step"},{sui:80,t:"Open step"},
+  {sui:75,t:"Going to Midtown to watch the Knicks game"},
+  {sui:70,t:"Take the train to Central Park"},
+  {sui:65,t:"Manhattan haircut in the Lower East Side"},
+  {sui:60,t:"Crossing the river by train (anywhere in Manhattan)"},
+  {sui:55,t:"Going to a movie theater nearby"},
+  {sui:50,t:"Bike to Williamsburg (18 min) · Train to Williamsburg (harder route)"},
+  {sui:45,t:"Take the train for 1 stop · Train to Williamsburg (easier route)"},
+  {sui:40,t:"Walk to USPS (4 blocks) · Walk to train station (15 min) · Train to Ridgewood, solo"},
+  {sui:35,t:"Drive car round trip to get it cleaned (5 min each way)"},
+  {sui:30,t:"Train to Ridgewood with a friend · Walk 4 blocks"},
+  {sui:25,t:"12-minute bike ride · 10-minute walk (each way)"},
+  {sui:20,t:"Maria Hernandez Park (7–8 min away) · Bike to USPS"},
+  {sui:15,t:"Six-minute walk"},{sui:10,t:"Grocery store walk"},
+];
+const STEPS=[...HIERARCHY].map((s,i)=>({...s,idx:i})).sort((a,b)=>a.sui-b.sui);
+const REPS_TO_MASTER=3, EASY_MAX=2;
+const SCORE_COLORS=['','#9FB089','#B9C28A','#E3C271','#DA9A5E','#C66B55'];
+const SCORE_LABELS=['','Easy','Mild','OK','Hard','Too hard'];
+function suiColor(s){if(s>=90)return'#C66B55';if(s>=75)return'#DA9A5E';if(s>=55)return'#E3C271';if(s>=35)return'#B9C28A';return'#9FB089';}
+
+/* ===== Local store (offline-first) =====
+   Each log has a stable uuid as primary key so the same row syncs
+   cleanly. 'pending' marks rows not yet pushed to the cloud. */
+const STORE_KEY='steady.logs.v2';
+let logs=[];
+let user=null;
+function loadLocal(){try{logs=JSON.parse(localStorage.getItem(STORE_KEY)||'[]');}catch(e){logs=[];}}
+function saveLocal(){try{localStorage.setItem(STORE_KEY,JSON.stringify(logs));}catch(e){showToast("Couldn't save locally.");}}
+function uuid(){return (crypto.randomUUID?crypto.randomUUID():'id-'+Date.now()+'-'+Math.random().toString(16).slice(2));}
+
+let current=null, pickedScore=null, selectedDay=null, calYear, calMonth;
+let syncState='local'; // local | synced | offline | busy
+
+/* ===== helpers ===== */
+function startOfWeek(ts){const d=new Date(ts);const day=(d.getDay()+6)%7;d.setHours(0,0,0,0);d.setDate(d.getDate()-day);return d.getTime();}
+function weekStart(){return startOfWeek(Date.now());}
+function logsFor(s){return logs.filter(l=>l.t===s.t&&l.sui===s.sui);}
+function masteredReps(s){return logsFor(s).filter(l=>l.score<=EASY_MAX).length;}
+function isMastered(s){return masteredReps(s)>=REPS_TO_MASTER;}
+function dayKey(ts){const d=new Date(ts);return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();}
+
+/* ===== SYNC ===== */
+function setSync(state){
+  syncState=state;
+  const pill=document.getElementById('syncPill'),txt=document.getElementById('syncTxt');
+  pill.classList.remove('off','local','busy');
+  if(state==='synced'){txt.textContent='Synced';}
+  else if(state==='offline'){pill.classList.add('off');txt.textContent='Offline';}
+  else if(state==='busy'){pill.classList.add('busy');txt.textContent='Syncing…';}
+  else {pill.classList.add('local');txt.textContent='On this device';}
+}
+async function pushPending(){
+  if(!sb||!user) return;
+  const pending=logs.filter(l=>l.pending);
+  if(!pending.length) return;
+  const rows=pending.map(l=>({id:l.id,user_id:user.id,sui:l.sui,title:l.t,score:l.score,note:l.note||'',ts:new Date(l.ts).toISOString()}));
+  const {error}=await sb.from('logs').upsert(rows);
+  if(!error){logs.forEach(l=>{if(l.pending)delete l.pending;});saveLocal();}
+  else throw error;
+}
+async function pullAll(){
+  if(!sb||!user) return;
+  const {data,error}=await sb.from('logs').select('*');
+  if(error) throw error;
+  // merge: cloud is source of truth, but keep any local-only pending rows
+  const cloud=(data||[]).map(r=>({id:r.id,sui:r.sui,t:r.title,score:r.score,note:r.note,ts:new Date(r.ts).getTime()}));
+  const cloudIds=new Set(cloud.map(r=>r.id));
+  const localPending=logs.filter(l=>l.pending&&!cloudIds.has(l.id));
+  logs=[...cloud,...localPending].sort((a,b)=>a.ts-b.ts);
+  saveLocal();
+}
+async function fullSync(){
+  if(!sb||!user){setSync('local');return;}
+  if(!navigator.onLine){setSync('offline');return;}
+  try{setSync('busy');await pushPending();await pullAll();setSync('synced');renderAll();}
+  catch(e){console.warn('sync failed',e);setSync('offline');}
+}
+
+/* ===== Recommendation ===== */
+function recommend(){
+  let reach=STEPS.find(s=>!isMastered(s))||STEPS[STEPS.length-1];
+  const ws=weekStart();
+  const tw=logsFor(reach).filter(l=>l.ts>=ws), ever=logsFor(reach), reps=masteredReps(reach);
+  let reachWhy;
+  if(tw.length){const best=Math.min(...tw.map(l=>l.score));
+    if(best<=EASY_MAX) reachWhy=reps>=REPS_TO_MASTER?"You've made this easy — next time you log it, you move up a rung.":"It's getting easier each time. "+(REPS_TO_MASTER-reps)+" more calm run"+((REPS_TO_MASTER-reps)===1?'':'s')+" and it's yours.";
+    else if(best>=5) reachWhy="This landed hard this week — no rush to repeat it. The safe step below is the wiser move today.";
+    else reachWhy="You've faced it already this week. Each repeat makes it a little smaller.";
+  } else if(ever.length){const last=ever[ever.length-1].score;
+    reachWhy=last>=5?"Last time this felt like a lot. When you're ready, try it gently — and the safe step is always here first.":"You've started this one before. A fresh try this week keeps it moving.";
+  } else reachWhy="This is the next stretch up. Aim for it once this week — and remember, attempting counts even if it's hard.";
+  const below=STEPS.filter(s=>s.sui<reach.sui);
+  const cm=below.filter(s=>isMastered(s)),cf=below.filter(s=>logsFor(s).length>0);
+  let safe=cm.length?cm[cm.length-1]:cf.length?cf[cf.length-1]:below.length?below[below.length-1]:reach;
+  const safeWhy=(safe===reach)?"Start here. There's no pressure to go further than this feels right.":(isMastered(safe)?"You've already made this one easy. A grounding win you can lean on any day.":"Gentle and familiar. Perfect for a day when you just want to keep the streak alive.");
+  return {reach,reachWhy,reps,safe,safeWhy};
+}
+
+/* ===== Streaks ===== */
+function activeDaySet(){return new Set(logs.map(l=>dayKey(l.ts)));}
+function currentStreak(){const set=activeDaySet();let n=0;const d=new Date();d.setHours(0,0,0,0);
+  if(!set.has(dayKey(d.getTime())))d.setDate(d.getDate()-1);
+  while(set.has(dayKey(d.getTime()))){n++;d.setDate(d.getDate()-1);}return n;}
+function longestStreak(){const days=[...activeDaySet()].map(k=>{const[y,m,dd]=k.split('-').map(Number);return new Date(y,m,dd).getTime();}).sort((a,b)=>a-b);
+  let best=0,run=0,prev=null;days.forEach(t=>{if(prev!==null&&t-prev===864e5)run++;else run=1;best=Math.max(best,run);prev=t;});return best;}
+
+/* ===== Encouragement ===== */
+function daysSinceLast(){if(!logs.length)return Infinity;return Math.floor((Date.now()-logs[logs.length-1].ts)/864e5);}
+function buildCheer(){
+  const el=document.getElementById('cheer');const total=logs.length,ws=weekStart();
+  const weekCount=logs.filter(l=>l.ts>=ws).length;const last=logs[total-1],gap=daysSinceLast(),streak=currentStreak();
+  let greet,msg,badge='';
+  if(total===0){greet="Hi — glad you're here.";msg="Nothing to prove today. When you face something on your list, log it and we'll figure out the next gentle step together.";}
+  else if(gap>=7){greet="Good to see you again.";msg="Stepping away is part of it too. There's no catching up to do — just pick whichever option below feels possible right now.";}
+  else if(last&&last.score>=5){greet="That took real courage.";msg="You faced something that felt like too much — and logged it honestly. That's exactly how this works. Be gentle today; the safe step is here for you.";}
+  else if(last&&last.score<=EASY_MAX){greet="Look at you go.";msg="That one's getting easier, and that's not luck — it's the repetition doing its quiet work. You're building real ground under your feet.";}
+  else{greet="You showed up.";msg="Facing it at all is the whole game — the number matters less than the fact that you did it. Keep going at your pace.";}
+  if(streak>=2)badge=`🔥 ${streak}-day streak — you're doing a great job`;
+  else if(weekCount>0)badge=`🌿 ${weekCount} logged this week — every one counts`;
+  el.innerHTML=`<div class="greet">${greet}</div><div class="msg">${msg}</div>`+(badge?`<div class="streak">${badge}</div>`:'');
+}
+
+/* ===== Home ===== */
+function renderToday(){
+  buildCheer();const r=recommend();const reps=r.reps;
+  const pips=Array.from({length:REPS_TO_MASTER},(_,i)=>`<span class="pip${i<reps?' fill':''}"></span>`).join('');
+  const wrap=document.getElementById('options');
+  wrap.innerHTML=`
+    <div class="opt safe" id="optSafe"><span class="sui-tag">${r.safe.sui}</span>
+      <div class="kind">🛟 Safe step</div><div class="name">${r.safe.t}</div><div class="desc">${r.safeWhy}</div>
+      <button class="act">Log the safe step</button></div>
+    <div class="opt reach" id="optReach"><span class="sui-tag" style="color:#fff">${r.reach.sui}</span>
+      <div class="kind">🎯 Your reach</div><div class="name">${r.reach.t}</div><div class="desc">${r.reachWhy}</div>
+      <div class="prog">${pips}</div><button class="act">Log the reach</button></div>`;
+  document.getElementById('optSafe').onclick=()=>openSheet(r.safe);
+  document.getElementById('optReach').onclick=()=>openSheet(r.reach);
+  document.getElementById('miniaffirm').textContent="Whichever you choose — or if today's a rest day — that's a valid call. You're the one steering.";
+}
+
+/* ===== Calendar ===== */
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function dayLogs(y,m,d){return logs.filter(l=>{const dt=new Date(l.ts);return dt.getFullYear()===y&&dt.getMonth()===m&&dt.getDate()===d;});}
+function renderStreakRow(){const cur=currentStreak(),best=longestStreak();
+  document.getElementById('streakRow').innerHTML=`
+    <div class="streakbox ${cur>=2?'hot':''}"><div class="v">${cur}🔥</div><div class="k">Current streak</div></div>
+    <div class="streakbox"><div class="v">${best}</div><div class="k">Longest streak</div></div>
+    <div class="streakbox"><div class="v">${activeDaySet().size}</div><div class="k">Active days</div></div>`;}
+function renderCalendar(){
+  const el=document.getElementById('calcard');
+  const first=new Date(calYear,calMonth,1);const startPad=(first.getDay()+6)%7;
+  const dim=new Date(calYear,calMonth+1,0).getDate();const today=new Date();today.setHours(0,0,0,0);
+  const isFuture=(calYear>today.getFullYear())||(calYear===today.getFullYear()&&calMonth>=today.getMonth());
+  let cells='';
+  for(let i=0;i<startPad;i++)cells+=`<div class="cell pad"></div>`;
+  for(let d=1;d<=dim;d++){const dl=dayLogs(calYear,calMonth,d);
+    const isToday=(calYear===today.getFullYear()&&calMonth===today.getMonth()&&d===today.getDate());
+    let cls='cell',style='';
+    if(dl.length){const best=Math.min(...dl.map(l=>l.score));cls+=' logged';style=`background:${SCORE_COLORS[best]}`;
+      const prev=new Date(calYear,calMonth,d-1);if(activeDaySet().has(dayKey(prev.getTime())))cls+=' instreak';}
+    if(isToday)cls+=' today';if(selectedDay===d&&dl.length)cls+=' sel';
+    cells+=`<div class="${cls}" style="${style}" data-day="${d}"><span class="cd">${d}</span>${dl.length?`<span class="cdot"></span>`:''}</div>`;}
+  el.innerHTML=`<div class="calhead"><div class="mlabel">${MONTHS[calMonth]} ${calYear}</div>
+    <div class="calnav"><button id="calPrev">‹</button><button id="calNext" ${isFuture?'disabled':''}>›</button></div></div>
+    <div class="dow"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+    <div class="grid">${cells}</div>
+    <div class="callegend"><span class="lg"><span class="sw" style="background:#9FB089"></span>Easy day</span>
+    <span class="lg"><span class="sw" style="background:#E3C271"></span>Middle</span>
+    <span class="lg"><span class="sw" style="background:#C66B55"></span>Hard but done</span></div>`;
+  document.getElementById('calPrev').onclick=()=>{if(calMonth===0){calMonth=11;calYear--;}else calMonth--;selectedDay=null;renderCalendar();renderDayDetail();};
+  const nx=document.getElementById('calNext');if(nx&&!isFuture)nx.onclick=()=>{if(calMonth===11){calMonth=0;calYear++;}else calMonth++;selectedDay=null;renderCalendar();renderDayDetail();};
+  el.querySelectorAll('.cell.logged').forEach(c=>{c.onclick=()=>{selectedDay=+c.dataset.day;renderCalendar();renderDayDetail();};});
+}
+function renderDayDetail(){const el=document.getElementById('dayDetail');if(!selectedDay){el.innerHTML='';return;}
+  const dl=dayLogs(calYear,calMonth,selectedDay);if(!dl.length){el.innerHTML='';return;}
+  const items=dl.map(l=>`<div class="ditem"><div class="db" style="background:${SCORE_COLORS[l.score]}">${l.score}</div>
+    <div class="dx">${l.t}<div style="font-size:11.5px;color:var(--ink-soft);margin-top:2px">${SCORE_LABELS[l.score]} · anxiety ${l.sui}</div></div></div>`).join('');
+  el.innerHTML=`<div class="daydetail"><div class="dt">${MONTHS[calMonth]} ${selectedDay} — ${dl.length} logged</div>${items}</div>`;}
+
+/* ===== Ladder ===== */
+function renderLadder(){const r=recommend();const el=document.getElementById('ladderList');el.innerHTML='';
+  HIERARCHY.forEach(step=>{const my=logsFor(step),done=my.length>0,last=done?my[my.length-1]:null;
+    const mastered=isMastered(step);const isReach=(step.t===r.reach.t&&step.sui===r.reach.sui);
+    const card=document.createElement('div');card.className='step'+(mastered?' done':'')+(isReach?' isreach':'');
+    card.innerHTML=`<div class="sui" style="background:${suiColor(step.sui)}">${step.sui}</div>
+      <div class="step-body"><div class="step-title">${step.t}</div>
+      <div class="step-meta">${isReach?`<span class="chip star">🎯 Reach</span>`:''}
+        ${mastered?`<span class="chip">✓ Mastered</span>`:done?`<span class="chip">${my.length}× · last ${last.score}</span>`:`<span>Anxiety ${step.sui}</span>`}
+      </div></div><div class="chev">›</div>`;
+    card.onclick=()=>openSheet(step);el.appendChild(card);});}
+
+/* ===== Sheet ===== */
+function openSheet(step){current=step;pickedScore=null;
+  document.getElementById('shTitle').textContent=step.t;
+  document.getElementById('shBase').textContent='Therapist anxiety rating: '+step.sui+' / 100';
+  document.getElementById('note').value='';buildScale();document.getElementById('save').disabled=true;
+  document.getElementById('scrim').classList.add('on');document.getElementById('sheet').classList.add('on');}
+function closeSheet(){document.getElementById('scrim').classList.remove('on');document.getElementById('sheet').classList.remove('on');}
+function buildScale(){const el=document.getElementById('scale');el.innerHTML='';
+  for(let n=1;n<=5;n++){const b=document.createElement('button');b.className='sc';
+    b.innerHTML=`<span class="n">${n}</span><span class="l">${SCORE_LABELS[n]}</span>`;
+    b.onclick=()=>{pickedScore=n;[...el.children].forEach(c=>{c.classList.remove('pick');c.style.background='';});
+      b.classList.add('pick');b.style.background=SCORE_COLORS[n];document.getElementById('save').disabled=false;};
+    el.appendChild(b);}}
+document.getElementById('save').onclick=async()=>{
+  if(!current||!pickedScore)return;
+  const wasMastered=isMastered(current);
+  const entry={id:uuid(),sui:current.sui,t:current.t,score:pickedScore,note:document.getElementById('note').value.trim(),ts:Date.now(),pending:true};
+  logs.push(entry);logs.sort((a,b)=>a.ts-b.ts);saveLocal();
+  const nowMastered=isMastered(current);
+  closeSheet();renderAll();
+  if(!wasMastered&&nowMastered)showToast('🎉 You mastered that step. Genuinely well done.');
+  else if(pickedScore<=EASY_MAX)showToast("Logged ✓  That's getting easier — proof you're growing.");
+  else if(pickedScore>=5)showToast('Logged ✓  That was hard and you did it anyway. Rest easy tonight.');
+  else showToast('Logged ✓  You faced it. That\'s the win that counts.');
+  fullSync();
+};
+document.getElementById('cancel').onclick=closeSheet;
+document.getElementById('scrim').onclick=closeSheet;
+
+/* ===== History ===== */
+function fmt(ts){const d=new Date(ts);return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});}
+function renderHistory(){renderStreakRow();renderCalendar();renderDayDetail();
+  const el=document.getElementById('historyList');
+  if(!logs.length){el.innerHTML=`<div class="empty"><div class="ico">🌱</div>
+    <p>No entries yet. When you face a step, log it — your calendar will start filling in.</p></div>`;return;}
+  el.innerHTML='';[...logs].slice().reverse().forEach(l=>{const c=document.createElement('div');c.className='hcard';
+    c.innerHTML=`<div class="hrow"><div class="hbadge" style="background:${SCORE_COLORS[l.score]}">${l.score}</div>
+      <div style="flex:1;min-width:0"><div class="ht">${l.t}</div>
+      <div class="hd">${fmt(l.ts)} · ${SCORE_LABELS[l.score]} · anxiety ${l.sui}</div></div></div>
+      ${l.note?`<div class="hnote">${escapeHtml(l.note)}</div>`:''}`;el.appendChild(c);});}
+
+/* ===== Progress + account ===== */
+function renderProgress(){
+  document.getElementById('stTotal').textContent=logs.length;
+  document.getElementById('stWeek').textContent=logs.filter(l=>l.ts>=weekStart()).length;
+  document.getElementById('stAvg').textContent=logs.length?(logs.reduce((a,l)=>a+l.score,0)/logs.length).toFixed(1):'—';
+  const el=document.getElementById('progressList');
+  const conquered=HIERARCHY.filter(s=>logsFor(s).length>0);
+  if(!conquered.length){el.innerHTML=`<div class="empty"><div class="ico">🪜</div>
+    <p>Every step you log shows up here. The ladder is yours to climb at your own pace.</p></div>`;}
+  else{el.innerHTML='';conquered.sort((a,b)=>b.sui-a.sui).forEach(s=>{const mine=logsFor(s),best=Math.min(...mine.map(l=>l.score)),mastered=isMastered(s);
+    const c=document.createElement('div');c.className='hcard';
+    c.innerHTML=`<div class="hrow"><div class="hbadge" style="background:${suiColor(s.sui)}">${s.sui}</div>
+      <div style="flex:1;min-width:0"><div class="ht">${s.t} ${mastered?'<span class="chip">✓ Mastered</span>':''}</div>
+      <div class="hd">Faced ${mine.length}× · easiest so far: ${SCORE_LABELS[best]} (${best})</div></div></div>`;el.appendChild(c);});}
+  renderAccount();
+}
+function renderAccount(){
+  const el=document.getElementById('acct');
+  if(user){
+    el.innerHTML=`<div class="ae">${escapeHtml(user.email)}</div>
+      <div class="as">Signed in · your logs sync to your private account.</div>
+      <div class="arow"><button id="syncNow">Sync now</button><button id="signOut">Sign out</button></div>`;
+    document.getElementById('syncNow').onclick=fullSync;
+    document.getElementById('signOut').onclick=async()=>{await sb.auth.signOut();user=null;showAuth();};
+  } else if(SUPA_READY){
+    el.innerHTML=`<div class="ae">Not signed in</div>
+      <div class="as">Your logs are saved on this device only. Sign in to sync across devices.</div>
+      <div class="arow"><button id="goSignIn">Sign in</button></div>`;
+    document.getElementById('goSignIn').onclick=showAuth;
+  } else {
+    el.innerHTML=`<div class="ae">Local mode</div>
+      <div class="as">Cloud sync isn't configured yet. Your logs are saved on this device. Add your Supabase keys in the code to enable sync.</div>`;
+  }
+}
+
+/* ===== Tabs ===== */
+document.querySelectorAll('.tab').forEach(t=>{t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');document.getElementById(t.dataset.tab).classList.add('on');};});
+
+/* ===== Auth UI ===== */
+let authMode='in';
+function showAuth(){document.getElementById('appView').style.display='none';document.getElementById('authView').classList.add('on');}
+function showApp(){document.getElementById('authView').classList.remove('on');document.getElementById('appView').style.display='block';renderAll();}
+function swapAuthMode(){
+  authMode=authMode==='in'?'up':'in';
+  document.getElementById('authBtn').textContent=authMode==='in'?'Sign in':'Create account';
+  document.getElementById('authToggle').innerHTML=authMode==='in'
+    ?`New here? <button id="authSwap">Create an account</button>`
+    :`Already have an account? <button id="authSwap">Sign in</button>`;
+  document.getElementById('authSwap').onclick=swapAuthMode;
+  document.getElementById('authErr').textContent='';
+}
+document.getElementById('authSwap').onclick=swapAuthMode;
+document.getElementById('authBtn').onclick=async()=>{
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPass').value;
+  const err=document.getElementById('authErr');err.textContent='';
+  if(!email||!pass){err.textContent='Enter your email and password.';return;}
+  if(!sb){err.textContent='Cloud sync not configured yet.';return;}
+  try{
+    let res;
+    if(authMode==='up') res=await sb.auth.signUp({email,password:pass});
+    else res=await sb.auth.signInWithPassword({email,password:pass});
+    if(res.error){err.textContent=res.error.message;return;}
+    if(authMode==='up'&&!res.data.session){err.textContent='Check your email to confirm your account, then sign in.';return;}
+    user=res.data.user;showApp();await fullSync();
+  }catch(e){err.textContent='Something went wrong. Try again.';}
+};
+
+/* ===== boot ===== */
+function renderAll(){renderToday();renderHistory();renderLadder();renderProgress();}
+function escapeHtml(s){return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+let toastT;function showToast(m){const el=document.getElementById('toast');el.textContent=m;el.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('on'),2800);}
+
+window.addEventListener('online',()=>{if(user)fullSync();});
+window.addEventListener('offline',()=>{if(user)setSync('offline');});
+
+(async function init(){
+  loadLocal();const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
+  if(sb){
+    const {data}=await sb.auth.getSession();
+    if(data&&data.session){user=data.session.user;showApp();fullSync();}
+    else {renderAll();showAuth();}
+    sb.auth.onAuthStateChange((_e,session)=>{user=session?session.user:null;});
+  } else {
+    // no cloud configured: run fully local
+    setSync('local');renderAll();showApp();
+  }
+})();
+</script>
+</body>
+</html>
