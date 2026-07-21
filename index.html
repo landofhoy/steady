@@ -56,6 +56,11 @@
     color:var(--ink-soft);border-radius:10px;font-family:inherit;transition:.18s;cursor:pointer;}
   .tab.on{background:var(--paper-2);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07);}
 
+  .segrow{display:flex;gap:5px;background:rgba(0,0,0,.04);padding:4px;border-radius:12px;margin:2px 2px 13px;}
+  .segbtn{flex:1;text-align:center;padding:8px 4px;border:none;background:transparent;font-size:12.5px;font-weight:600;
+    color:var(--ink-soft);border-radius:9px;font-family:inherit;transition:.15s;cursor:pointer;}
+  .segbtn.on{background:var(--paper-2);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.07);}
+
   main{padding:4px 18px calc(var(--safe-bot) + 40px);}
   .view{display:none;animation:fade .25s ease;}
   .view.on{display:block;}
@@ -68,8 +73,14 @@
   .cheer{margin:10px 2px 4px;}
   .cheer .greet{font-family:Georgia,serif;font-size:23px;font-weight:600;line-height:1.25;}
   .cheer .msg{font-size:14.5px;line-height:1.5;color:var(--ink-soft);margin-top:8px;}
-  .streak{display:inline-flex;align-items:center;gap:6px;margin-top:13px;background:rgba(201,123,90,.13);
-    color:var(--clay);font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:20px;}
+
+  .todaystreak{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:linear-gradient(150deg,rgba(201,123,90,.15),rgba(201,123,90,.05));
+    border:1px solid rgba(201,123,90,.3);border-radius:17px;padding:13px 17px;margin:2px 2px 0;}
+  .todaystreak .tsleft{display:flex;align-items:baseline;gap:8px;}
+  .todaystreak .tsnum{font-family:Georgia,serif;font-size:26px;font-weight:700;color:var(--clay);line-height:1;}
+  .todaystreak .tslabel{font-size:12px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+  .todaystreak .tsmsg{font-size:12px;color:var(--ink-soft);text-align:right;max-width:150px;line-height:1.35;font-weight:500;}
 
   .opt{border-radius:20px;padding:18px 19px;margin-bottom:13px;position:relative;overflow:hidden;cursor:pointer;transition:transform .12s;}
   .opt:active{transform:scale(.99);}
@@ -86,9 +97,11 @@
   .opt.reach .prog{display:flex;gap:5px;margin-top:14px;position:relative;z-index:1;}
   .opt.reach .pip{flex:1;height:6px;border-radius:6px;background:rgba(255,255,255,.25);}
   .opt.reach .pip.fill{background:#F2EFE9;}
-  .opt.safe{background:var(--paper-2);border:1.5px solid var(--line);color:var(--ink);}
-  .opt.safe .kind{color:var(--sage-deep);}.opt.safe .desc{color:var(--ink-soft);}
-  .opt.safe .act{background:rgba(124,143,107,.16);color:var(--sage-deep);}
+  .opt.safe{background:linear-gradient(150deg,rgba(124,143,107,.20),rgba(124,143,107,.07));
+    border:1.5px solid rgba(124,143,107,.4);color:var(--ink);box-shadow:0 8px 20px rgba(124,143,107,.16);}
+  .opt.safe .kind{color:var(--sage-deep);font-weight:800;}.opt.safe .desc{color:var(--ink-soft);}
+  .opt.safe .act{background:var(--sage-deep);color:#fff;}
+  .opt.safe .sui-tag{opacity:.7;color:var(--sage-deep);}
   .opt .sui-tag{position:absolute;right:16px;top:16px;font-family:Georgia,serif;font-weight:700;font-size:15px;opacity:.5;z-index:1;}
   .miniaffirm{text-align:center;font-size:13px;color:var(--ink-soft);line-height:1.5;padding:18px 20px 4px;font-style:italic;}
 
@@ -143,6 +156,19 @@
   .chip.star{background:rgba(201,123,90,.15);color:var(--clay);}
   .chev{flex:none;color:var(--line);font-size:20px;}
 
+  .ladder-title-input{width:100%;border:1.5px solid var(--line);background:var(--paper);border-radius:10px;padding:9px 11px;
+    font-family:inherit;font-size:14.5px;font-weight:500;color:var(--ink);margin-bottom:9px;}
+  .ladder-title-input:focus{outline:none;border-color:var(--sage);}
+  .ladder-edit-row{display:flex;flex-wrap:wrap;gap:7px;align-items:center;}
+  .ladder-edit-row .scorewrap{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);font-weight:600;}
+  .ladder-score-input{width:56px;border:1.5px solid var(--line);border-radius:8px;padding:6px 7px;
+    font-family:inherit;font-size:13px;color:var(--ink);background:var(--paper);}
+  .ladder-edit-row .ebtn{border:none;cursor:pointer;font-family:inherit;font-size:11.5px;font-weight:600;padding:5px 10px;
+    border-radius:20px;background:rgba(124,143,107,.13);color:var(--sage-deep);}
+  .ladder-edit-row .ebtn.on{background:var(--sage-deep);color:#fff;}
+  .ladder-edit-row .ebtn.reach.on{background:var(--clay);}
+  .ladder-edit-row .ebtn.del{background:rgba(201,123,90,.13);color:var(--clay);margin-left:auto;}
+
   .scrim{position:fixed;inset:0;background:rgba(20,22,17,.42);opacity:0;pointer-events:none;transition:.25s;z-index:40;}
   .scrim.on{opacity:1;pointer-events:auto;}
   .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--paper);border-radius:26px 26px 0 0;
@@ -192,6 +218,14 @@
   .acct .arow button{flex:1;border-radius:11px;padding:11px;font-family:inherit;font-size:13.5px;font-weight:700;cursor:pointer;border:1.5px solid var(--line);background:var(--paper);color:var(--ink);}
   .linkbtn{background:none;border:none;color:var(--sage-deep);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;}
 
+  .summarycard{background:linear-gradient(150deg,rgba(124,143,107,.11),rgba(124,143,107,.03));
+    border:1px solid rgba(124,143,107,.3);border-radius:16px;padding:16px 17px;margin-top:6px;}
+  .summarycard .srow{display:flex;gap:11px;padding:8px 0;}
+  .summarycard .srow+.srow{border-top:1px solid rgba(124,143,107,.18);}
+  .summarycard .sico{flex:none;font-size:16px;line-height:1.4;}
+  .summarycard .stext{font-size:13.5px;line-height:1.55;color:var(--ink);}
+  .summarycard .stext strong{color:var(--sage-deep);}
+
   .toast{position:fixed;left:50%;bottom:calc(var(--safe-bot) + 28px);transform:translate(-50%,20px);background:var(--ink);
     color:var(--paper);padding:13px 22px;border-radius:30px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;
     transition:.3s;z-index:80;max-width:90%;text-align:center;line-height:1.35;}
@@ -224,13 +258,14 @@
       </div>
       <div class="tabs">
         <button class="tab on" data-tab="today">This week</button>
+        <button class="tab" data-tab="progress">Progress</button>
         <button class="tab" data-tab="history">History</button>
         <button class="tab" data-tab="ladder">Ladder</button>
-        <button class="tab" data-tab="progress">Progress</button>
       </div>
     </header>
     <main>
       <section class="view on" id="today">
+        <div class="todaystreak" id="todayStreak"></div>
         <div class="cheer" id="cheer"></div>
         <div class="section-label">Here's what you could try</div>
         <div id="options"></div>
@@ -245,8 +280,9 @@
         <div id="historyList"></div>
       </section>
       <section class="view" id="ladder">
-        <div class="section-label">Your full hierarchy</div>
+        <div class="section-label">Your full hierarchy<button class="linkbtn" id="ladderEditToggle">Edit</button></div>
         <div id="ladderList"></div>
+        <div id="ladderAddWrap"></div>
       </section>
       <section class="view" id="progress">
         <div class="section-label">At a glance</div>
@@ -255,7 +291,14 @@
           <div class="stat"><div class="v" id="stWeek">0</div><div class="k">This week</div></div>
           <div class="stat"><div class="v" id="stAvg">—</div><div class="k">Avg difficulty</div></div>
         </div>
+        <div class="section-label">Summary</div>
+        <div class="summarycard" id="summaryCard"></div>
         <div class="section-label">Steps you've conquered</div>
+        <div class="segrow" id="progressFilterRow">
+          <button class="segbtn on" data-filter="all">All time</button>
+          <button class="segbtn" data-filter="week">This week</button>
+          <button class="segbtn" data-filter="month">This month</button>
+        </div>
         <div id="progressList"></div>
         <div class="section-label">Account</div>
         <div class="acct" id="acct"></div>
@@ -301,8 +344,14 @@ const SUPA_READY = SUPABASE_URL && !SUPABASE_URL.includes("YOUR-PROJECT");
 let sb = null;
 if (SUPA_READY && window.supabase) sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-/* ===== Hierarchy ===== */
-const HIERARCHY=[
+/* ===== Hierarchy =====
+   HIERARCHY is now user-editable (add/delete steps, edit scores) and
+   persisted locally, seeded once from DEFAULT_HIERARCHY. Matching a log
+   to a step is still done by title+score (as before) — so editing a
+   step's title or score going forward starts a fresh history thread for
+   it, while past logs stay untouched in History. This keeps the logic
+   explicit and inspectable rather than adding hidden id-based rewriting. */
+const DEFAULT_HIERARCHY=[
   {sui:100,t:"Driving to office"},{sui:100,t:"Driving to airport"},
   {sui:95,t:"Open step"},{sui:90,t:"Open step"},{sui:85,t:"Open step"},{sui:80,t:"Open step"},
   {sui:75,t:"Going to Midtown to watch the Knicks game"},
@@ -319,7 +368,38 @@ const HIERARCHY=[
   {sui:20,t:"Maria Hernandez Park (7–8 min away) · Bike to USPS"},
   {sui:15,t:"Six-minute walk"},{sui:10,t:"Grocery store walk"},
 ];
-const STEPS=[...HIERARCHY].map((s,i)=>({...s,idx:i})).sort((a,b)=>a.sui-b.sui);
+const HSTORE_KEY='steady.hierarchy.v1';
+let HIERARCHY=[], STEPS=[];
+function loadHierarchy(){
+  try{
+    const raw=localStorage.getItem(HSTORE_KEY);
+    const parsed=raw?JSON.parse(raw):null;
+    if(Array.isArray(parsed)&&parsed.length){HIERARCHY=parsed;return;}
+  }catch(e){}
+  HIERARCHY=DEFAULT_HIERARCHY.map(s=>({...s,id:uuid()}));saveHierarchy();
+}
+function saveHierarchy(){try{localStorage.setItem(HSTORE_KEY,JSON.stringify(HIERARCHY));}catch(e){showToast("Couldn't save ladder changes locally.");}}
+function refreshSteps(){STEPS=[...HIERARCHY].sort((a,b)=>a.sui-b.sui);}
+function addHierarchyStep(t,sui){HIERARCHY.push({id:uuid(),sui,t});saveHierarchy();refreshSteps();}
+function updateHierarchyStep(id,changes){const s=HIERARCHY.find(x=>x.id===id);if(!s)return;Object.assign(s,changes);saveHierarchy();refreshSteps();}
+function deleteHierarchyStep(id){
+  HIERARCHY=HIERARCHY.filter(s=>s.id!==id);
+  if(overrides.reachId===id)overrides.reachId=null;
+  if(overrides.safeId===id)overrides.safeId=null;
+  saveOverrides();saveHierarchy();refreshSteps();
+}
+
+/* ===== Manual safe/reach picks =====
+   By default the app auto-picks safe/reach (see recommend()). The
+   person can instead pin a specific step as the safe step and/or the
+   reach step from the Ladder tab; that pin persists until cleared. */
+const OSTORE_KEY='steady.overrides.v1';
+let overrides={reachId:null,safeId:null};
+function loadOverrides(){try{const raw=JSON.parse(localStorage.getItem(OSTORE_KEY));if(raw)overrides=raw;}catch(e){}}
+function saveOverrides(){try{localStorage.setItem(OSTORE_KEY,JSON.stringify(overrides));}catch(e){}}
+function setOverride(kind,id){overrides[kind]=(overrides[kind]===id)?null:id;saveOverrides();}
+function resetOverrides(){overrides={reachId:null,safeId:null};saveOverrides();}
+
 const REPS_TO_MASTER=3, EASY_MAX=2;
 const SCORE_COLORS=['','#9FB089','#B9C28A','#E3C271','#DA9A5E','#C66B55'];
 const SCORE_LABELS=['','Easy','Mild','OK','Hard','Too hard'];
@@ -385,22 +465,34 @@ async function fullSync(){
 
 /* ===== Recommendation ===== */
 function recommend(){
-  let reach=STEPS.find(s=>!isMastered(s))||STEPS[STEPS.length-1];
+  if(!STEPS.length) return null;
+  const reachOverride=overrides.reachId?STEPS.find(s=>s.id===overrides.reachId):null;
+  let reach=reachOverride||STEPS.find(s=>!isMastered(s))||STEPS[STEPS.length-1];
+  const reachManual=!!reachOverride;
   const ws=weekStart();
   const tw=logsFor(reach).filter(l=>l.ts>=ws), ever=logsFor(reach), reps=masteredReps(reach);
   let reachWhy;
-  if(tw.length){const best=Math.min(...tw.map(l=>l.score));
+  if(reachManual) reachWhy="You picked this as your reach step.";
+  else if(tw.length){const best=Math.min(...tw.map(l=>l.score));
     if(best<=EASY_MAX) reachWhy=reps>=REPS_TO_MASTER?"You've made this easy — next time you log it, you move up a rung.":"It's getting easier each time. "+(REPS_TO_MASTER-reps)+" more calm run"+((REPS_TO_MASTER-reps)===1?'':'s')+" and it's yours.";
     else if(best>=5) reachWhy="This landed hard this week — no rush to repeat it. The safe step below is the wiser move today.";
     else reachWhy="You've faced it already this week. Each repeat makes it a little smaller.";
   } else if(ever.length){const last=ever[ever.length-1].score;
     reachWhy=last>=5?"Last time this felt like a lot. When you're ready, try it gently — and the safe step is always here first.":"You've started this one before. A fresh try this week keeps it moving.";
   } else reachWhy="This is the next stretch up. Aim for it once this week — and remember, attempting counts even if it's hard.";
-  const below=STEPS.filter(s=>s.sui<reach.sui);
-  const cm=below.filter(s=>isMastered(s)),cf=below.filter(s=>logsFor(s).length>0);
-  let safe=cm.length?cm[cm.length-1]:cf.length?cf[cf.length-1]:below.length?below[below.length-1]:reach;
-  const safeWhy=(safe===reach)?"Start here. There's no pressure to go further than this feels right.":(isMastered(safe)?"You've already made this one easy. A grounding win you can lean on any day.":"Gentle and familiar. Perfect for a day when you just want to keep the streak alive.");
-  return {reach,reachWhy,reps,safe,safeWhy};
+  const safeOverride=overrides.safeId?STEPS.find(s=>s.id===overrides.safeId):null;
+  const safeManual=!!safeOverride;
+  let safe,safeWhy;
+  if(safeOverride){
+    safe=safeOverride;
+    safeWhy=(safe===reach)?"You picked this as your safe step too — start here, no pressure to go further.":"You picked this as your go-to safe step.";
+  } else {
+    const below=STEPS.filter(s=>s.sui<reach.sui);
+    const cm=below.filter(s=>isMastered(s)),cf=below.filter(s=>logsFor(s).length>0);
+    safe=cm.length?cm[cm.length-1]:cf.length?cf[cf.length-1]:below.length?below[below.length-1]:reach;
+    safeWhy=(safe===reach)?"Start here. There's no pressure to go further than this feels right.":(isMastered(safe)?"You've already made this one easy. A grounding win you can lean on any day.":"Gentle and familiar. Perfect for a day when you just want to keep the streak alive.");
+  }
+  return {reach,reachWhy,reps,safe,safeWhy,reachManual,safeManual};
 }
 
 /* ===== Streaks ===== */
@@ -414,30 +506,42 @@ function longestStreak(){const days=[...activeDaySet()].map(k=>{const[y,m,dd]=k.
 /* ===== Encouragement ===== */
 function daysSinceLast(){if(!logs.length)return Infinity;return Math.floor((Date.now()-logs[logs.length-1].ts)/864e5);}
 function buildCheer(){
-  const el=document.getElementById('cheer');const total=logs.length,ws=weekStart();
-  const weekCount=logs.filter(l=>l.ts>=ws).length;const last=logs[total-1],gap=daysSinceLast(),streak=currentStreak();
-  let greet,msg,badge='';
+  const el=document.getElementById('cheer');const total=logs.length,gap=daysSinceLast();
+  const last=logs[total-1];
+  let greet,msg;
   if(total===0){greet="Hi — glad you're here.";msg="Nothing to prove today. When you face something on your list, log it and we'll figure out the next gentle step together.";}
   else if(gap>=7){greet="Good to see you again.";msg="Stepping away is part of it too. There's no catching up to do — just pick whichever option below feels possible right now.";}
   else if(last&&last.score>=5){greet="That took real courage.";msg="You faced something that felt like too much — and logged it honestly. That's exactly how this works. Be gentle today; the safe step is here for you.";}
   else if(last&&last.score<=EASY_MAX){greet="Look at you go.";msg="That one's getting easier, and that's not luck — it's the repetition doing its quiet work. You're building real ground under your feet.";}
   else{greet="You showed up.";msg="Facing it at all is the whole game — the number matters less than the fact that you did it. Keep going at your pace.";}
-  if(streak>=2)badge=`🔥 ${streak}-day streak — you're doing a great job`;
-  else if(weekCount>0)badge=`🌿 ${weekCount} logged this week — every one counts`;
-  el.innerHTML=`<div class="greet">${greet}</div><div class="msg">${msg}</div>`+(badge?`<div class="streak">${badge}</div>`:'');
+  el.innerHTML=`<div class="greet">${greet}</div><div class="msg">${msg}</div>`;
 }
 
 /* ===== Home ===== */
+function renderTodayStreak(){
+  const el=document.getElementById('todayStreak');if(!el)return;
+  const cur=currentStreak();
+  const weekCount=logs.filter(l=>l.ts>=weekStart()).length;
+  const nudge=cur===0?"Log something today to start one.":cur===1?"Keep it going tomorrow.":cur<7?"You're on a roll — don't break it.":"Incredible consistency. Truly.";
+  const tail=weekCount>0?`${weekCount} logged this week · ${nudge}`:nudge;
+  el.innerHTML=`<div class="tsleft"><span class="tsnum">${cur}🔥</span><span class="tslabel">day streak</span></div><div class="tsmsg">${tail}</div>`;
+}
 function renderToday(){
-  buildCheer();const r=recommend();const reps=r.reps;
+  renderTodayStreak();
+  buildCheer();const r=recommend();const wrap=document.getElementById('options');
+  if(!r){
+    wrap.innerHTML=`<div class="empty"><div class="ico">🪜</div><p>Your ladder is empty. Add a step or two on the Ladder tab to get your first recommendation.</p></div>`;
+    document.getElementById('miniaffirm').textContent='';
+    return;
+  }
+  const reps=r.reps;
   const pips=Array.from({length:REPS_TO_MASTER},(_,i)=>`<span class="pip${i<reps?' fill':''}"></span>`).join('');
-  const wrap=document.getElementById('options');
   wrap.innerHTML=`
     <div class="opt safe" id="optSafe"><span class="sui-tag">${r.safe.sui}</span>
-      <div class="kind">🛟 Safe step</div><div class="name">${r.safe.t}</div><div class="desc">${r.safeWhy}</div>
+      <div class="kind">🛟 Safe step${r.safeManual?' <span style="opacity:.75;font-weight:600">· your pick</span>':''}</div><div class="name">${r.safe.t}</div><div class="desc">${r.safeWhy}</div>
       <button class="act">Log the safe step</button></div>
     <div class="opt reach" id="optReach"><span class="sui-tag" style="color:#fff">${r.reach.sui}</span>
-      <div class="kind">🎯 Your reach</div><div class="name">${r.reach.t}</div><div class="desc">${r.reachWhy}</div>
+      <div class="kind">🎯 Your reach${r.reachManual?' <span style="opacity:.75;font-weight:600">· your pick</span>':''}</div><div class="name">${r.reach.t}</div><div class="desc">${r.reachWhy}</div>
       <div class="prog">${pips}</div><button class="act">Log the reach</button></div>`;
   document.getElementById('optSafe').onclick=()=>openSheet(r.safe);
   document.getElementById('optReach').onclick=()=>openSheet(r.reach);
@@ -484,16 +588,86 @@ function renderDayDetail(){const el=document.getElementById('dayDetail');if(!sel
   el.innerHTML=`<div class="daydetail"><div class="dt">${MONTHS[calMonth]} ${selectedDay} — ${dl.length} logged</div>${items}</div>`;}
 
 /* ===== Ladder ===== */
-function renderLadder(){const r=recommend();const el=document.getElementById('ladderList');el.innerHTML='';
-  HIERARCHY.forEach(step=>{const my=logsFor(step),done=my.length>0,last=done?my[my.length-1]:null;
-    const mastered=isMastered(step);const isReach=(step.t===r.reach.t&&step.sui===r.reach.sui);
-    const card=document.createElement('div');card.className='step'+(mastered?' done':'')+(isReach?' isreach':'');
-    card.innerHTML=`<div class="sui" style="background:${suiColor(step.sui)}">${step.sui}</div>
-      <div class="step-body"><div class="step-title">${step.t}</div>
-      <div class="step-meta">${isReach?`<span class="chip star">🎯 Reach</span>`:''}
-        ${mastered?`<span class="chip">✓ Mastered</span>`:done?`<span class="chip">${my.length}× · last ${last.score}</span>`:`<span>Anxiety ${step.sui}</span>`}
-      </div></div><div class="chev">›</div>`;
-    card.onclick=()=>openSheet(step);el.appendChild(card);});}
+let ladderEditing=false;
+function renderLadder(){
+  const r=recommend();const el=document.getElementById('ladderList');el.innerHTML='';
+  const sorted=[...HIERARCHY].sort((a,b)=>b.sui-a.sui);
+  if(!sorted.length){
+    el.innerHTML=`<div class="empty"><div class="ico">🪜</div><p>${ladderEditing?"Add your first step below.":"Your ladder is empty. Tap Edit to add steps."}</p></div>`;
+  }
+  sorted.forEach(step=>{
+    const my=logsFor(step),done=my.length>0,last=done?my[my.length-1]:null;
+    const mastered=isMastered(step);
+    const isReach=r&&step.id===r.reach.id, isSafe=r&&step.id===r.safe.id;
+    const card=document.createElement('div');
+    if(ladderEditing){
+      card.className='step';card.style.cursor='default';
+      card.innerHTML=`<div class="sui" style="background:${suiColor(step.sui)}">${step.sui}</div>
+        <div class="step-body" style="min-width:0">
+          <input class="ladder-title-input" data-id="${step.id}" value="${escapeHtml(step.t)}">
+          <div class="ladder-edit-row">
+            <span class="scorewrap">Score <input type="number" class="ladder-score-input" min="1" max="100" data-id="${step.id}" value="${step.sui}"></span>
+            <button class="ebtn${isSafe?' on':''}" data-act="safe" data-id="${step.id}">🛟 ${isSafe?'Safe ✓':'Set safe'}</button>
+            <button class="ebtn reach${isReach?' on':''}" data-act="reach" data-id="${step.id}">🎯 ${isReach?'Reach ✓':'Set reach'}</button>
+            <button class="ebtn del" data-act="del" data-id="${step.id}">🗑 Delete</button>
+          </div>
+        </div>`;
+    } else {
+      card.className='step'+(mastered?' done':'')+(isReach?' isreach':'');
+      card.innerHTML=`<div class="sui" style="background:${suiColor(step.sui)}">${step.sui}</div>
+        <div class="step-body"><div class="step-title">${step.t}</div>
+        <div class="step-meta">${isReach?`<span class="chip star">🎯 Reach</span>`:isSafe?`<span class="chip">🛟 Safe</span>`:''}
+          ${mastered?`<span class="chip">✓ Mastered</span>`:done?`<span class="chip">${my.length}× · last ${last.score}</span>`:`<span>Anxiety ${step.sui}</span>`}
+        </div></div><div class="chev">›</div>`;
+      card.onclick=()=>openSheet(step);
+    }
+    el.appendChild(card);
+  });
+  if(ladderEditing){
+    el.querySelectorAll('.ladder-title-input').forEach(inp=>{
+      inp.onchange=()=>{updateHierarchyStep(inp.dataset.id,{t:inp.value.trim()||'Untitled step'});renderAll();};
+    });
+    el.querySelectorAll('.ladder-score-input').forEach(inp=>{
+      inp.onchange=()=>{let v=parseInt(inp.value,10);if(isNaN(v))v=1;v=Math.max(1,Math.min(100,v));updateHierarchyStep(inp.dataset.id,{sui:v});renderAll();};
+    });
+    el.querySelectorAll('[data-act="safe"]').forEach(b=>{b.onclick=()=>{setOverride('safeId',b.dataset.id);renderAll();};});
+    el.querySelectorAll('[data-act="reach"]').forEach(b=>{b.onclick=()=>{setOverride('reachId',b.dataset.id);renderAll();};});
+    el.querySelectorAll('[data-act="del"]').forEach(b=>{b.onclick=()=>{
+      const step=HIERARCHY.find(s=>s.id===b.dataset.id);if(!step)return;
+      const hasHistory=logsFor(step).length>0;
+      const msg=hasHistory?`Delete "${step.t}"? Your past logs for it stay in History, but it'll come off the ladder.`:`Delete "${step.t}"?`;
+      if(confirm(msg)){deleteHierarchyStep(step.id);renderAll();}
+    };});
+  }
+  renderLadderFooter();
+}
+function renderLadderFooter(){
+  const wrap=document.getElementById('ladderAddWrap');
+  if(!ladderEditing){wrap.innerHTML='';return;}
+  const anyOverride=overrides.reachId||overrides.safeId;
+  wrap.innerHTML=`
+    ${anyOverride?`<button class="btn ghost" id="clearOverrides" style="margin-top:6px">Use automatic recommendations again</button>`:''}
+    <div class="calcard" style="margin-top:16px">
+      <div class="calhead"><div class="mlabel" style="font-size:16px">Add a step</div></div>
+      <div class="field"><label>Step</label><input id="newStepTitle" placeholder="e.g. Walk to the corner store"></div>
+      <div class="field" style="margin-top:10px"><label>Anxiety score (1–100)</label><input id="newStepScore" type="number" min="1" max="100" placeholder="e.g. 45"></div>
+      <button class="btn" id="addStepBtn" style="margin-top:4px">Add to ladder</button>
+    </div>`;
+  if(anyOverride)document.getElementById('clearOverrides').onclick=()=>{resetOverrides();renderAll();};
+  document.getElementById('addStepBtn').onclick=()=>{
+    const t=document.getElementById('newStepTitle').value.trim();
+    let sui=parseInt(document.getElementById('newStepScore').value,10);
+    if(!t){showToast('Give the step a name first.');return;}
+    if(isNaN(sui)){showToast('Give it a score from 1–100.');return;}
+    sui=Math.max(1,Math.min(100,sui));
+    addHierarchyStep(t,sui);showToast('Added to your ladder ✓');renderAll();
+  };
+}
+document.getElementById('ladderEditToggle').onclick=()=>{
+  ladderEditing=!ladderEditing;
+  document.getElementById('ladderEditToggle').textContent=ladderEditing?'Done':'Edit';
+  renderLadder();
+};
 
 /* ===== Sheet ===== */
 function openSheet(step){current=step;pickedScore=null;
@@ -537,21 +711,66 @@ function renderHistory(){renderStreakRow();renderCalendar();renderDayDetail();
       ${l.note?`<div class="hnote">${escapeHtml(l.note)}</div>`:''}`;el.appendChild(c);});}
 
 /* ===== Progress + account ===== */
+function buildSummary(){
+  const el=document.getElementById('summaryCard');if(!el)return;
+  if(!logs.length){el.innerHTML=`<div class="srow"><span class="sico">📊</span><span class="stext">Log a few entries and this space will start reflecting your progress back to you.</span></div>`;return;}
+  const rows=[];
+  const sorted=[...logs].sort((a,b)=>a.ts-b.ts);
+  const mastered=HIERARCHY.filter(s=>isMastered(s));
+  if(mastered.length) rows.push({ico:'🏆',text:`You've fully mastered <strong>${mastered.length} step${mastered.length===1?'':'s'}</strong> on your ladder — each one took repeated, deliberate practice to get there.`});
+  if(sorted.length>=4){
+    const half=Math.max(1,Math.floor(sorted.length/2));
+    const first=sorted.slice(0,half), second=sorted.slice(-half);
+    const avgFirst=first.reduce((a,l)=>a+l.score,0)/first.length;
+    const avgSecond=second.reduce((a,l)=>a+l.score,0)/second.length;
+    const diff=avgFirst-avgSecond;
+    if(diff>=0.4) rows.push({ico:'📈',text:`Your difficulty ratings are trending down — early entries averaged <strong>${avgFirst.toFixed(1)}</strong>, your most recent ones average <strong>${avgSecond.toFixed(1)}</strong>. That's measurable progress, not just a feeling.`});
+    else if(diff<=-0.4) rows.push({ico:'💪',text:`You've been pushing into harder territory lately (recent avg <strong>${avgSecond.toFixed(1)}</strong> vs <strong>${avgFirst.toFixed(1)}</strong> earlier) — stretching yourself like that is exactly the work, even when it doesn't feel easy in the moment.`});
+    else rows.push({ico:'🌿',text:`Your difficulty ratings have held steady around <strong>${avgSecond.toFixed(1)}</strong> — steady practice, even without a dramatic swing, is still building your tolerance.`});
+  }
+  const best=longestStreak();
+  if(best>=2) rows.push({ico:'🔥',text:`Your longest streak so far is <strong>${best} day${best===1?'':'s'}</strong> — proof you can build real rhythm with this when you're ready to.`});
+  const counts={};
+  logs.forEach(l=>{const k=l.t+'|'+l.sui;counts[k]=(counts[k]||0)+1;});
+  const topKey=Object.keys(counts).sort((a,b)=>counts[b]-counts[a])[0];
+  if(topKey&&counts[topKey]>=3){
+    const t=topKey.slice(0,topKey.lastIndexOf('|'));
+    rows.push({ico:'🔁',text:`You've returned to "${escapeHtml(t)}" <strong>${counts[topKey]}×</strong> — that kind of repetition is exactly how a step stops feeling scary.`});
+  }
+  const wc=logs.filter(l=>l.ts>=weekStart()).length;
+  if(wc>0) rows.push({ico:'✅',text:`<strong>${wc} log${wc===1?'':'s'}</strong> already this week — you're actively working the ladder, not just thinking about it.`});
+  if(!rows.length) rows.push({ico:'🌱',text:`You've logged ${logs.length} entr${logs.length===1?'y':'ies'} so far. Keep going — patterns will start showing up here.`});
+  el.innerHTML=rows.map(r=>`<div class="srow"><span class="sico">${r.ico}</span><span class="stext">${r.text}</span></div>`).join('');
+}
+let progressFilter='all'; // 'all' | 'week' | 'month'
 function renderProgress(){
   document.getElementById('stTotal').textContent=logs.length;
   document.getElementById('stWeek').textContent=logs.filter(l=>l.ts>=weekStart()).length;
   document.getElementById('stAvg').textContent=logs.length?(logs.reduce((a,l)=>a+l.score,0)/logs.length).toFixed(1):'—';
+  buildSummary();
   const el=document.getElementById('progressList');
-  const conquered=HIERARCHY.filter(s=>logsFor(s).length>0);
+  const cutoff=progressFilter==='week'?Date.now()-7*864e5:progressFilter==='month'?Date.now()-30*864e5:0;
+  const periodLabel=progressFilter==='week'?'the last 7 days':progressFilter==='month'?'the last 30 days':null;
+  const conquered=HIERARCHY.filter(s=>logsFor(s).some(l=>l.ts>=cutoff));
   if(!conquered.length){el.innerHTML=`<div class="empty"><div class="ico">🪜</div>
-    <p>Every step you log shows up here. The ladder is yours to climb at your own pace.</p></div>`;}
-  else{el.innerHTML='';conquered.sort((a,b)=>b.sui-a.sui).forEach(s=>{const mine=logsFor(s),best=Math.min(...mine.map(l=>l.score)),mastered=isMastered(s);
+    <p>${periodLabel?`No steps logged in ${periodLabel} yet.`:"Every step you log shows up here. The ladder is yours to climb at your own pace."}</p></div>`;}
+  else{el.innerHTML='';conquered.sort((a,b)=>b.sui-a.sui).forEach(s=>{
+    const mineAll=logsFor(s);const mine=periodLabel?mineAll.filter(l=>l.ts>=cutoff):mineAll;
+    const best=Math.min(...mine.map(l=>l.score)),mastered=isMastered(s);
     const c=document.createElement('div');c.className='hcard';
     c.innerHTML=`<div class="hrow"><div class="hbadge" style="background:${suiColor(s.sui)}">${s.sui}</div>
       <div style="flex:1;min-width:0"><div class="ht">${s.t} ${mastered?'<span class="chip">✓ Mastered</span>':''}</div>
-      <div class="hd">Faced ${mine.length}× · easiest so far: ${SCORE_LABELS[best]} (${best})</div></div></div>`;el.appendChild(c);});}
+      <div class="hd">Faced ${mine.length}× ${periodLabel?'in this period':''} · easiest ${periodLabel?'in period':'so far'}: ${SCORE_LABELS[best]} (${best})</div></div></div>`;el.appendChild(c);});}
   renderAccount();
 }
+document.querySelectorAll('#progressFilterRow .segbtn').forEach(b=>{
+  b.onclick=()=>{
+    progressFilter=b.dataset.filter;
+    document.querySelectorAll('#progressFilterRow .segbtn').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    renderProgress();
+  };
+});
 function renderAccount(){
   const el=document.getElementById('acct');
   if(user){
@@ -616,6 +835,7 @@ window.addEventListener('online',()=>{if(user)fullSync();});
 window.addEventListener('offline',()=>{if(user)setSync('offline');});
 
 (async function init(){
+  loadHierarchy();loadOverrides();refreshSteps();
   loadLocal();const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
   if(sb){
     const {data}=await sb.auth.getSession();
