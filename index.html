@@ -380,13 +380,13 @@ function loadHierarchy(){
 }
 function saveHierarchy(){try{localStorage.setItem(HSTORE_KEY,JSON.stringify(HIERARCHY));}catch(e){showToast("Couldn't save ladder changes locally.");}}
 function refreshSteps(){STEPS=[...HIERARCHY].sort((a,b)=>a.sui-b.sui);}
-function addHierarchyStep(t,sui){HIERARCHY.push({id:uuid(),sui,t});saveHierarchy();refreshSteps();}
-function updateHierarchyStep(id,changes){const s=HIERARCHY.find(x=>x.id===id);if(!s)return;Object.assign(s,changes);saveHierarchy();refreshSteps();}
+function addHierarchyStep(t,sui){HIERARCHY.push({id:uuid(),sui,t});saveHierarchy();refreshSteps();markHierarchyDirty();}
+function updateHierarchyStep(id,changes){const s=HIERARCHY.find(x=>x.id===id);if(!s)return;Object.assign(s,changes);saveHierarchy();refreshSteps();markHierarchyDirty();}
 function deleteHierarchyStep(id){
   HIERARCHY=HIERARCHY.filter(s=>s.id!==id);
   if(overrides.reachId===id)overrides.reachId=null;
   if(overrides.safeId===id)overrides.safeId=null;
-  saveOverrides();saveHierarchy();refreshSteps();
+  saveOverrides();saveHierarchy();refreshSteps();markHierarchyDirty();
 }
 
 /* ===== Manual safe/reach picks =====
@@ -397,8 +397,8 @@ const OSTORE_KEY='steady.overrides.v1';
 let overrides={reachId:null,safeId:null};
 function loadOverrides(){try{const raw=JSON.parse(localStorage.getItem(OSTORE_KEY));if(raw)overrides=raw;}catch(e){}}
 function saveOverrides(){try{localStorage.setItem(OSTORE_KEY,JSON.stringify(overrides));}catch(e){}}
-function setOverride(kind,id){overrides[kind]=(overrides[kind]===id)?null:id;saveOverrides();}
-function resetOverrides(){overrides={reachId:null,safeId:null};saveOverrides();}
+function setOverride(kind,id){overrides[kind]=(overrides[kind]===id)?null:id;saveOverrides();markHierarchyDirty();}
+function resetOverrides(){overrides={reachId:null,safeId:null};saveOverrides();markHierarchyDirty();}
 
 const REPS_TO_MASTER=3, EASY_MAX=2;
 const SCORE_COLORS=['','#9FB089','#B9C28A','#E3C271','#DA9A5E','#C66B55'];
@@ -456,10 +456,41 @@ async function pullAll(){
   logs=[...cloud,...localPending].sort((a,b)=>a.ts-b.ts);
   saveLocal();
 }
+
+/* ===== Hierarchy sync =====
+   The ladder + safe/reach pins sync as one JSON blob per user (see
+   hierarchy_state table). Whichever device syncs first with no cloud
+   row yet becomes the baseline; after that, a genuine unsynced local
+   edit (hMeta.pending) pushes up, otherwise a newer cloud copy is
+   pulled down. Same push-then-pull spirit as the logs sync above. */
+const HMETA_KEY='steady.hierarchy.meta.v1';
+let hMeta={updatedAt:0,pending:false};
+function loadHMeta(){try{const raw=JSON.parse(localStorage.getItem(HMETA_KEY));if(raw)hMeta=raw;}catch(e){}}
+function saveHMeta(){try{localStorage.setItem(HMETA_KEY,JSON.stringify(hMeta));}catch(e){}}
+function markHierarchyDirty(){hMeta={updatedAt:Date.now(),pending:true};saveHMeta();syncHierarchy();}
+async function syncHierarchy(){
+  if(!sb||!user||!navigator.onLine) return;
+  try{
+    const {data,error}=await sb.from('hierarchy_state').select('*').eq('user_id',user.id).maybeSingle();
+    if(error) throw error;
+    if(!data){
+      await sb.from('hierarchy_state').upsert({user_id:user.id,hierarchy:HIERARCHY,overrides:overrides,updated_at:new Date().toISOString()});
+      hMeta={updatedAt:Date.now(),pending:false};saveHMeta();
+    } else if(hMeta.pending){
+      await sb.from('hierarchy_state').upsert({user_id:user.id,hierarchy:HIERARCHY,overrides:overrides,updated_at:new Date(hMeta.updatedAt).toISOString()});
+      hMeta.pending=false;saveHMeta();
+    } else if(new Date(data.updated_at).getTime()>hMeta.updatedAt){
+      HIERARCHY=data.hierarchy||HIERARCHY;overrides=data.overrides||overrides;
+      hMeta={updatedAt:new Date(data.updated_at).getTime(),pending:false};saveHMeta();
+      saveHierarchy();saveOverrides();refreshSteps();
+    }
+    renderAll();
+  }catch(e){console.warn('hierarchy sync failed',e);}
+}
 async function fullSync(){
   if(!sb||!user){setSync('local');return;}
   if(!navigator.onLine){setSync('offline');return;}
-  try{setSync('busy');await pushPending();await pullAll();setSync('synced');renderAll();}
+  try{setSync('busy');await pushPending();await pullAll();await syncHierarchy();setSync('synced');renderAll();}
   catch(e){console.warn('sync failed',e);setSync('offline');}
 }
 
@@ -835,7 +866,7 @@ window.addEventListener('online',()=>{if(user)fullSync();});
 window.addEventListener('offline',()=>{if(user)setSync('offline');});
 
 (async function init(){
-  loadHierarchy();loadOverrides();refreshSteps();
+  loadHierarchy();loadOverrides();loadHMeta();refreshSteps();
   loadLocal();const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
   if(sb){
     const {data}=await sb.auth.getSession();
